@@ -1,0 +1,85 @@
+name: PDF to video
+
+on:
+  push:
+    paths:
+      - 'pdfs/**.pdf'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Rebuild videos that already exist'
+        type: boolean
+        default: false
+      preset:
+        description: 'fast = quickest render, quality = 30fps higher detail'
+        type: choice
+        options: [fast, quality]
+        default: fast
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pdf-to-video
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: '**/requirements.txt'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: System packages (ffmpeg, Inter font)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-inter
+
+      - name: Python + Node dependencies
+        run: |
+          T=$([ -d tools ] && echo tools || echo .)
+          pip install -r $T/requirements.txt
+          cd $T && npm install --no-audit --no-fund
+
+      - name: Cache voice model (about 350 MB, downloaded once)
+        uses: actions/cache@v4
+        with:
+          path: /tmp/voices
+          key: kokoro-v1.0
+
+      - name: Build videos for new PDFs
+        env:
+          KOKORO_DIR: /tmp/voices
+          FORCE: ${{ github.event.inputs.force == 'true' && '1' || '0' }}
+          PRESET: ${{ github.event.inputs.preset || 'fast' }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          T=$([ -d tools ] && echo tools || echo .)
+          python $T/build.py
+
+      - name: Publish Shorts + 16:9 edition as a GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          T=$([ -d tools ] && echo tools || echo .)
+          python $T/release.py
+
+      - name: Commit the new videos
+        run: |
+          git config user.name "pdf-to-video[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add videos
+          if git diff --cached --quiet; then echo "No new videos"; exit 0; fi
+          git commit -m "Add video + audio for new PDF [skip ci]"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

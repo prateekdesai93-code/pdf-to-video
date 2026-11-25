@@ -1,7 +1,8 @@
 """Publish out/* extras (Shorts + 16:9) as GitHub Release assets so the repo itself stays small."""
 import json, subprocess, os, sys, tempfile
 from pathlib import Path
-ROOT = Path(__file__).resolve().parent.parent
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent if HERE.name == 'tools' else HERE
 f = ROOT / 'out' / 'releases.json'
 if not f.exists(): print('nothing to release'); sys.exit(0)
 for r in json.load(open(f)):

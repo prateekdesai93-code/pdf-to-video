@@ -5,8 +5,10 @@ import os, sys, re, json, shutil, subprocess, threading, functools, http.server,
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
-ROOT = Path(__file__).resolve().parent.parent
-TOOLS = ROOT / 'tools'
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent if HERE.name == 'tools' else HERE   # works in a tools/ folder or flat at the repo root
+TOOLS = HERE
+WEB = 'web/' if (HERE / 'web').is_dir() else ''
 sys.path.insert(0, str(TOOLS))
 
 
@@ -41,7 +43,7 @@ def render_scene(args):
         b = p.chromium.launch(executable_path=chrome, args=['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'])
         pg = b.new_page(viewport={'width': 1080, 'height': 1920})
         pg.on('pageerror', lambda e: log('PAGEERROR', e))
-        pg.goto(f'http://127.0.0.1:{port}/web/page.html?job={job}&i={idx}&q={q}&bloom={bloom}')
+        pg.goto(f'http://127.0.0.1:{port}/{WEB}page.html?job={job}&i={idx}&q={q}&bloom={bloom}')
         pg.wait_for_function('window.READY===true', timeout=180000)
         ff = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', str(FPS), '-c:v', 'mjpeg', '-i', '-',
                                '-vf', 'format=yuv420p', '-c:v', 'libx264', '-crf', str(crf), '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-r', str(FPS), tmp], stdin=subprocess.PIPE)
