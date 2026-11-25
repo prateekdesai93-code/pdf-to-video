@@ -140,6 +140,12 @@ def make_extras(name, story, jd, starts, final, parsed, cfg):
                         '[0:v]split[a][b];[b]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,boxblur=40:6,eq=brightness=-0.12[bg];[a]scale=-2:1080[fg];[bg][fg]overlay=(W-w)/2:0,format=yuv420p[v]',
                         '-map', '[v]', '-map', '0:a', '-c:v', 'libx264', '-crf', '27', '-preset', 'veryfast', '-c:a', 'copy', '-movflags', '+faststart', str(out / f)], check=True)
         extras.append({'label': '16:9 landscape edition (blurred sides)', 'file': f, 'url': url(f), 'kind': 'landscape'}); files.append(f)
+    if cfg.get('thumbnail', True):
+        try:
+            from thumbnail import make as make_thumb
+            make_thumb(parsed, story, jd, ROOT / 'videos' / f'{name}_thumbnail.png', cfg)
+        except Exception as e:
+            log('thumbnail skipped:', e)
     txt = pack(parsed, story, starts)
     (ROOT / 'videos' / f'{name}_youtube.txt').write_text(txt, encoding='utf-8')
     if files and repo:
@@ -156,7 +162,7 @@ def update_manifest(name, parsed, story, pdf, dur, final, extras=()):
     items = [i for i in items if i['name'] != name]
     titles = [s['headline'] for s in parsed['stories']]
     items.append({'name': name, 'title': f"{parsed['brand'].title() if parsed['brand'].isupper() else parsed['brand']}", 'date': parsed['date'],
-                  'pdf': f'pdfs/{pdf.name}', 'video': f'videos/{name}.mp4', 'poster': f'videos/{name}.jpg', 'audio': f'videos/{name}.m4a', 'youtube': f'videos/{name}_youtube.txt', 'extras': list(extras), 'duration': round(dur, 1),
+                  'pdf': f'pdfs/{pdf.name}', 'video': f'videos/{name}.mp4', 'poster': f'videos/{name}.jpg', 'audio': f'videos/{name}.m4a', 'youtube': f'videos/{name}_youtube.txt', 'thumbnail': f'videos/{name}_thumbnail.png', 'extras': list(extras), 'duration': round(dur, 1),
                   'size_mb': round(final.stat().st_size / 1e6, 1), 'stories': len(titles), 'headlines': titles,
                   'created': datetime.datetime.utcnow().isoformat(timespec='seconds') + 'Z',
                   'chapters': [{'t': round(sum(s['dur'] for s in story['scenes'][:i]), 2), 'label': (sc.get('headline') or {'intro': 'Intro', 'also': 'Also watching', 'outro': 'Sign-off'}.get(sc['type'], sc['id']))} for i, sc in enumerate(story['scenes'])]})

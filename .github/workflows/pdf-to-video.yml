@@ -1,6 +1,8 @@
 name: PDF to video
 
 on:
+  schedule:
+    - cron: '0 4 * * *'   # daily safety net, 04:00 UTC: builds any PDF in pdfs/ that has no video yet
   push:
     paths:
       - 'pdfs/**.pdf'
