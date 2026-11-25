@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>News Briefing Studio — PDF to video</title>
+<meta name="theme-color" content="#03040a">
+<style>
+:root{--bg:#03040a;--card:#0b1020;--line:#1b2440;--tx:#eef1fa;--mut:#8f9ab3;--amb:#ffb400}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1200px 700px at 75% -10%,#18235055,transparent),var(--bg);color:var(--tx);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh;line-height:1.45}
+a{color:var(--amb)}button{font:inherit;color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:clamp(16px,3vw,40px)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:clamp(16px,3vw,30px)}
+.brand{font-weight:800;letter-spacing:.28em;font-size:14px;display:flex;align-items:center;gap:10px}
+.brand i{width:10px;height:10px;border-radius:50%;background:var(--amb);box-shadow:0 0 14px var(--amb)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;border:1px solid var(--line);background:var(--card);text-decoration:none;color:var(--tx);cursor:pointer;font-weight:700;font-size:14px;transition:transform .15s,border-color .15s}
+.btn:hover{transform:translateY(-2px);border-color:#3b4a85}.btn:focus-visible{outline:3px solid var(--amb);outline-offset:2px}
+.btn.pri{background:var(--amb);color:#1a1200;border-color:var(--amb)}
+main{display:grid;grid-template-columns:minmax(260px,400px) 1fr;gap:clamp(18px,4vw,46px);align-items:start}
+.phone{position:sticky;top:16px;border-radius:34px;padding:8px;background:linear-gradient(160deg,#242d52,#0a0e1f);box-shadow:0 30px 80px #000a,0 0 0 1px #ffffff14 inset}
+video{display:block;width:100%;aspect-ratio:9/16;border-radius:27px;background:#000;object-fit:cover}
+h1{font-size:clamp(28px,4.6vw,48px);line-height:1.05;letter-spacing:-.03em;font-weight:900}h1 em{color:var(--amb);font-style:normal}
+.lead{color:var(--mut);margin:10px 0 18px;max-width:56ch}
+.tabs{display:flex;gap:8px;margin:0 0 14px}.tab{padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:700;font-size:14px}.tab.on{background:var(--amb);color:#1a1200;border-color:var(--amb)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 18px}
+.ch{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;margin-bottom:8px;transition:border-color .15s,background .15s}
+.ch:hover{border-color:#3b4a85}.ch.on{border-color:var(--amb);background:#1a1606}.ch .n{color:var(--amb);font-weight:800;font-size:13px;width:24px}.ch .tt{flex:1;font-weight:600;font-size:15px}.ch .tm{color:var(--mut);font-size:12.5px;font-variant-numeric:tabular-nums}
+h2{font-size:13px;letter-spacing:.18em;color:var(--mut);margin:26px 0 10px}
+.ed{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;margin-bottom:8px}.ed.on{border-color:var(--amb)}
+.ed img{width:44px;height:78px;object-fit:cover;border-radius:8px;background:#000}.ed b{display:block}.ed small{color:var(--mut)}
+audio{width:100%;margin:6px 0 10px}
+.empty{border:1px dashed #3b4a85;border-radius:18px;padding:22px;color:#c9d0e4}.empty ol{margin:10px 0 0 20px}.empty li{margin:6px 0}
+footer{margin-top:32px;color:var(--mut);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+@media(max-width:780px){main{grid-template-columns:1fr}.phone{position:static;max-width:380px;margin:0 auto}}
+</style></head><body><div class="wrap">
+<header><div class="brand"><i></i>NEWS BRIEFING STUDIO</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn pri" id="add" href="#" target="_blank" rel="noopener">＋ Add a PDF</a><a class="btn" id="runs" href="#" target="_blank" rel="noopener">Build status</a></div></header>
+<main>
+<div class="phone"><video id="v" controls playsinline preload="metadata"></video></div>
+<section>
+<h1>Your PDF, <em>turned into a briefing.</em></h1>
+<p class="lead">Drop a PDF into the <code>pdfs/</code> folder of this repo. A few minutes later the video and a listen-only audio edition appear here, ready to download.</p>
+<div id="app"></div>
+</section></main>
+<footer>Informational briefings only. Not financial, legal or investment advice.</footer>
+</div>
+<script>
+const $=s=>document.querySelector(s),v=$('#v'),app=$('#app');
+const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// GitHub helper links (work on github.io project pages)
+(function(){const h=location.hostname,m=h.match(/^(.+)\.github\.io$/);if(m){const repo=location.pathname.split('/')[1];if(repo){const base=`https://github.com/${m[1]}/${repo}`;$('#add').href=base+'/upload/main/pdfs';$('#runs').href=base+'/actions';return}}
+$('#add').style.display=$('#runs').style.display='none'})();
+let items=[],cur=null,mode='video',audio=null;
+async function init(){
+  try{const r=await fetch('videos/manifest.json',{cache:'no-store'});if(!r.ok)throw 0;items=await r.json()}catch(e){items=[]}
+  if(!items.length){app.innerHTML=`<div class="empty"><b>No videos yet.</b><ol><li>Upload a PDF to the <code>pdfs/</code> folder (the <b>Add a PDF</b> button does this on GitHub).</li><li>The <b>PDF to video</b> action runs automatically (see <b>Build status</b>).</li><li>Refresh this page. Your video and audio edition appear here.</li></ol></div>`;return}
+  select(items[0])}
+function select(it){cur=it;v.poster=it.poster;v.src=it.video;if(audio){audio.pause()}render()}
+function render(){
+  const it=cur;
+  const list=items.map((x,i)=>`<div class="ed ${x===it?'on':''}" data-i="${i}" tabindex="0" role="button"><img src="${x.poster}" alt=""><div><b>${esc(x.date||x.title)}</b><small>${esc(x.title)} · ${x.stories} stories · ${fmt(x.duration)} · ${x.size_mb} MB</small></div></div>`).join('');
+  const ch=(it.chapters||[]).map((c,i)=>`<button class="ch" data-t="${c.t}"><span class="n">${String(i).padStart(2,'0')}</span><span class="tt">${esc(c.label)}</span><span class="tm">${fmt(c.t)}</span></button>`).join('');
+  app.innerHTML=`<div class="tabs"><button class="tab ${mode==='video'?'on':''}" data-m="video">▶ Watch</button><button class="tab ${mode==='audio'?'on':''}" data-m="audio">🎧 Listen</button></div>
+  ${mode==='audio'?`<audio id="a" controls preload="metadata" src="${it.audio}"></audio>`:''}
+  <div class="actions"><a class="btn pri" href="${it.video}" download>⬇ Download video (${it.size_mb} MB)</a><a class="btn" href="${it.audio}" download>⬇ Download audio</a><a class="btn" href="${it.pdf}" target="_blank" rel="noopener">PDF</a></div>
+  ${(it.extras&&it.extras.length)||it.youtube?`<h3 style="margin:18px 0 8px;font-size:15px;letter-spacing:.5px">For YouTube</h3><div class="actions">${it.youtube?`<a class="btn pri" href="${it.youtube}" target="_blank" rel="noopener">📋 Title, description &amp; chapters</a>`:''}${(it.extras||[]).map(x=>`<a class="btn" href="${x.url}" target="_blank" rel="noopener">⬇ ${esc(x.label)}</a>`).join('')}</div><p style="font-size:13px;opacity:.7;margin:6px 0 0">Shorts and the 16:9 edition are attached to this build's GitHub Release (Releases tab).</p>`:''}
+  <h2>CHAPTERS</h2>${ch}<h2>ALL EDITIONS</h2>${list}`;
+  audio=$('#a');
+  if(mode==='audio'){v.pause();v.style.opacity=.35}else v.style.opacity=1;
+  app.querySelectorAll('.ch').forEach(b=>b.onclick=()=>{const t=parseFloat(b.dataset.t)+.05;if(mode==='audio'&&audio){audio.currentTime=t;audio.play()}else{v.currentTime=t;v.play()}});
+  app.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{mode=b.dataset.m;render()});
+  app.querySelectorAll('.ed').forEach(b=>b.onclick=()=>select(items[b.dataset.i]));
+  tick()}
+function tick(){const t=(mode==='audio'&&audio?audio:v).currentTime||0;const chs=cur.chapters||[];let a=0;chs.forEach((c,i)=>{if(t>=c.t)a=i});app.querySelectorAll('.ch').forEach((b,i)=>b.classList.toggle('on',i===a))}
+v.addEventListener('timeupdate',tick);document.addEventListener('timeupdate',tick,true);
+init();
+</script></body></html>

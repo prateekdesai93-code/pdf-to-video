@@ -1,0 +1,6 @@
+pdfplumber
+playwright
+kokoro-onnx
+soundfile
+numpy
+pillow

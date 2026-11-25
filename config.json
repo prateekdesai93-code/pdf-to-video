@@ -1,0 +1,25 @@
+{
+  "preset": "fast",
+  "presets": {
+    "fast": {
+      "fps": 24,
+      "webgl_scale": 0.5,
+      "crf": 26,
+      "bloom": 0.4
+    },
+    "quality": {
+      "fps": 30,
+      "webgl_scale": 0.65,
+      "crf": 22,
+      "bloom": 0.6
+    }
+  },
+  "style": "full",
+  "voice": "af_heart",
+  "speed": 1.0,
+  "max_mb": 90,
+  "theme": {
+    "accent": "#ffb400",
+    "ticker": true
+  }
+}
